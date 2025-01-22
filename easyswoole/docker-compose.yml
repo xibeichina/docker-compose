@@ -1,0 +1,13 @@
+version: '3.7'
+services:
+  swoole:
+    container_name: yytel-api
+    image: registry.cn-beijing.aliyuncs.com/gaogao/swoole:4.4.16-php7.3
+    command: php easyswoole server start
+    volumes:
+      - "../:/var/www"
+      - "/etc/localtime:/etc/localtime:ro"  # 挂载宿主机的时区文件
+    ports:
+      - "9510:9501"
+    ulimits:
+      core: 0 # 禁止生成core.*文件

@@ -1,0 +1,35 @@
+version: '3.7'
+services:
+  php-fpm:
+    #    build: ./php-fpm
+    hostname: yytel-api-php-fpm
+    container_name: yytel-api-php-fpm
+    image: registry.cn-hangzhou.aliyuncs.com/rs0/php:7.3-fpm
+    restart: always
+    command:
+      - sh
+      - -c
+      - |
+        chown www-data:www-data /var/www/html/addons -R
+        chown www-data:www-data /var/www/html/application -R
+        chown www-data:www-data /var/www/html/runtime -R
+        chown www-data:www-data /var/www/html/public/uploads -R
+        /usr/local/sbin/php-fpm
+    volumes:
+      - "../:/var/www/html"
+      # - "./php-fpm/php/php.ini:/usr/local/etc/php/php.ini"
+      - "./php-fpm/php-fpm.d/www.conf:/usr/local/etc/php-fpm.d/www.conf"
+  nginx:
+    hostname: yytel-api-nginx
+    container_name: yytel-api-nginx
+    image: registry.cn-hangzhou.aliyuncs.com/rs0/nginx:1.23
+    restart: always
+    ports:
+      - "8602:80"
+    depends_on:
+      - "php-fpm"
+    volumes:
+      - "./nginx/conf.d:/etc/nginx/conf.d"
+      - "./nginx/nginx.conf:/etc/nginx/nginx.conf"
+      - "./nginx/logs:/var/log/nginx"
+      - "../:/var/www/html"

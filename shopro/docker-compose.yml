@@ -1,0 +1,66 @@
+version: '3.7'
+services:
+  php-fpm:
+    #    build: ./php-fpm
+    hostname: dc-shop-admin-php-fpm
+    container_name: dc-shop-admin-php-fpm
+    image: mlym3075/php:7.4-fpm
+    restart: always
+    command:
+      - sh
+      - -c
+      - |
+        chown www-data:www-data /var/www/html/addons -R
+        chown www-data:www-data /var/www/html/application -R
+        chown www-data:www-data /var/www/html/runtime -R
+        chown www-data:www-data /var/www/html/public -R
+        /usr/local/sbin/php-fpm
+    volumes:
+      - "../:/var/www/html"
+      # - "./php-fpm/php/php.ini:/usr/local/etc/php/php.ini"
+      - "./php-fpm/php/upload.ini:/usr/local/etc/php/conf.d/upload.ini"
+      - "./php-fpm/php-fpm.d/www.conf:/usr/local/etc/php-fpm.d/www.conf"
+  #    networks:
+  #      np_network:
+  #        ipv4_address: 192.168.0.11
+  nginx:
+    hostname: dc-shop-admin-nginx
+    container_name: dc-shop-admin-nginx
+    image: registry.cn-hangzhou.aliyuncs.com/rs0/nginx:1.23
+    restart: always
+    ports:
+      - "48074:80"
+    depends_on:
+      - "php-fpm"
+    volumes:
+      - "./nginx/conf.d:/etc/nginx/conf.d"
+      - "./nginx/nginx.conf:/etc/nginx/nginx.conf"
+      - "./nginx/logs:/var/log/nginx"
+      - "../:/var/www/html"
+  #    networks:
+  #      np_network:
+  #        ipv4_address: 192.168.0.10
+
+  queue-shopro:
+    hostname: dc-shop-admin-queue-shopro
+    container_name: dc-shop-admin-queue-shopro
+    image: mlym3075/php:7.4-fpm
+    user: "33"
+    restart: always
+    command: /usr/local/bin/php think queue:listen --queue=shopro
+    volumes:
+      - "../:/var/www/html"
+      - "./php-fpm/php-fpm.d/www.conf:/usr/local/etc/php-fpm.d/www.conf"
+
+  queue-shopro-high:
+    hostname: dc-shop-admin-queue-shopro-high
+    container_name: dc-shop-admin-queue-shopro-high
+    image: mlym3075/php:7.4-fpm
+    user: "33"
+    restart: always
+    command: /usr/local/bin/php think queue:listen --queue=shopro-high
+    volumes:
+      - "../:/var/www/html"
+      - "./php-fpm/php-fpm.d/www.conf:/usr/local/etc/php-fpm.d/www.conf"
+
+
