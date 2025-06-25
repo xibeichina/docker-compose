@@ -1,0 +1,60 @@
+services:
+  adminapi:
+    image: eclipse-temurin:21-jdk-jammy
+    container_name: ${ADMINAPI_CONTAINER_NAME}
+    working_dir: /app
+    ports:
+      - "${ADMINAPI_PORT}:58080"
+    volumes:
+      - ./tigshop-adminapi/tigshop-adminapi.jar:/app/tigshop-adminapi.jar
+      - ./tigshop-adminapi/opt:/app/opt
+      - ./tigshop-adminapi/logs:/app/logs
+    environment:
+      - LANG=en_US.UTF-8  # 设置字符集
+    entrypoint: [ "/bin/sh", "-c", "java -jar /app/tigshop-adminapi.jar --spring.profiles.active=${SPRING_PROFILES_ACTIVE} > /app/logs/nohup.log 2>&1" ]
+    depends_on:
+      - rabbitmq
+    networks:
+      - my-app-net
+
+  api:
+    image: eclipse-temurin:21-jdk-jammy
+    container_name: ${API_CONTAINER_NAME}
+    working_dir: /app
+    ports:
+      - "${API_PORT}:58181"
+    volumes:
+      - ./tigshop-api/tigshop-api.jar:/app/tigshop-api.jar
+      - ./tigshop-adminapi/opt:/app/opt
+      - ./tigshop-api/logs:/app/logs
+    environment:
+      - LANG=en_US.UTF-8  # 设置字符集
+    entrypoint: [ "/bin/sh", "-c", "java -jar /app/tigshop-api.jar --spring.profiles.active=${SPRING_PROFILES_ACTIVE} > /app/logs/nohup.log 2>&1" ]
+    depends_on:
+      - rabbitmq
+    networks:
+      - my-app-net
+
+  rabbitmq:
+    build:
+      context: ./rabbitmq-plugins
+    container_name: ${RABBITMQ_CONTAINER_NAME}
+    ports:
+      - "${RABBITMQ_PORT}:5672"
+      - "${RABBITMQ_MANAGEMENT_PORT}:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    networks:
+      - my-app-net
+
+volumes:
+  rabbitmq-data:
+    name: ${RABBITMQ_VOLUME_NAME}
+
+networks:
+  my-app-net:
+    driver: bridge
+    name: ${NETWORK_NAME}
