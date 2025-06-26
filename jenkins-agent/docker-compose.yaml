@@ -1,0 +1,30 @@
+services:
+  jenkins:
+    image: jenkins/ssh-agent:jdk21
+    container_name: jenkins-agent
+    restart: unless-stopped
+    ports:
+      - "12522:22"
+    volumes:
+      - jenkins-data:/home/jenkins/agent
+      - ./maven/settings.xml:/home/jenkins/.m2/settings.xml
+    environment:
+      - "TZ=Asia/Shanghai"
+    networks:
+      - jenkins_net
+    command: >
+      sh -c "
+        ssh-keygen -A && \
+        echo '修改这里的密码' | chpasswd && \
+        sed -i 's/^#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+        sed -i 's/^PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+        /usr/sbin/sshd -D
+      "
+
+volumes:
+  jenkins-data:
+    name: jenkins-home-data
+
+networks:
+  jenkins_net:
+    driver: bridge

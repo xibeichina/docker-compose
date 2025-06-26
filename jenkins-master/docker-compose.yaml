@@ -1,0 +1,25 @@
+services:
+  jenkins:
+    image: registry.cn-beijing.aliyuncs.com/gaogao/jenkins:lts-jdk21
+    container_name: jenkins
+    restart: unless-stopped
+    ports:
+      - "18080:8080"
+    volumes:
+      - jenkins-data:/var/jenkins_home
+      - ./maven/settings.xml:/var/jenkins_home/.m2/settings.xml
+    environment:
+      - "TZ=Asia/Shanghai"
+      # 设置 JVM 参数，可根据服务器配置调整
+      - "JAVA_OPTS=-Djava.awt.headless=true -Xmx2048m -Xms512m"
+    networks:
+      - jenkins_net
+
+volumes:
+  jenkins-data:
+    name: jenkins-home-data
+
+networks:
+  jenkins_net:
+    driver: bridge
+    name: jenkins_net
